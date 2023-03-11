@@ -1,0 +1,104 @@
+\documentclass[a4j, 11pt]{jsarticle}
+\usepackage[left=20mm,right=20mm,top=20mm,bottom=20mm]{geometry}
+
+% Required packages
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[
+colorlinks=true,
+linkcolor=blue,
+filecolor=magenta,
+urlcolor=magenta]{hyperref}
+
+\begin{document}
+\title{SlackからGoogle SpreadSheetにデータを転記するシステムの取り扱い説明書}
+\author{ Rj.Chiba \& ChatGPT }
+\date{\today}
+\maketitle
+
+\section{はじめに}
+本取り扱い説明書では、Slackデータ自動転記システムの利用方法について説明します。
+本システムは、Slack上のチャンネル上で発言されたデータをGoogleSpreadSheet上に自動で転記することができます。
+本書を読み、正しくシステムを利用することで、チームの生産性向上に役立てていただけます。
+
+\section{機能概要}
+本システムは以下の機能を有します。
+
+\begin{itemize}
+\item Slack APIを使用してチャンネル上の発言を取得
+\item Google Apps Scriptを使用して取得した発言をGoogle SpreadSheetに転記
+\item 取得したデータは、チャンネルごとにSpreadSheet上に保管される
+\item 特定のchannelを保存対象から外すことが可能
+\item 一定期間ごとに自動でスクリプトが実行され、Slackのデータが90日で削除されても、データがGoogle SpreadSheet上に保存される
+\end{itemize}
+
+\section{手順}
+本システムを使用するためには以下の手順を実行してください。
+
+\subsection{Slack Appの設定}
+\begin{enumerate}
+\item Slack Appの管理者権限を持っているユーザーでログインし、「\href{https://api.slack.com/apps}{Slack API : Application}」を開く。
+\item 「Create New App」をクリックする。
+\item アプリの名前を入力し、「Create App」をクリックする。
+\item 「Add features and functionality」のメニューから「Bots」をクリックする。
+\item 「Add a Bot User」をクリックし、Botの名前を入力する。
+\item 「OAuth \& Permissions」のメニューから、以下のスコープを追加する。
+\begin{itemize}
+\item channels:history
+\item channels:read
+\item groups:history
+\item groups:read
+\item im:history
+\item im:read
+\item mpim:history
+\item mpim:read
+\end{itemize}
+\item 「Install App」をクリックし、許可を与える。
+\item 「OAuth \& Permissions」の「Bot User OAuth Access Token」をメモする。
+\end{enumerate}
+
+\subsection{スプレッドシートの設定}
+\begin{enumerate}
+\item Google Driveのページを開き、新規スプレッドシートを作成する。
+\item 「拡張機能」→「スクリプトエディタ」をクリックする。
+\item 作成されたスクリプトエディタで、以下のコードをコピー\&ペーストする。
+\item \verb|const TOKEN = `YOUR_SLACK_API_TOKEN';| に「Bot User OAuth Access Token」を設定する。
+\item \verb|const timeZone| にタイムゾーンを設定する(日本国であれば\verb|`Asia/Tokyo'|)。
+\item スプレッドシートに戻り、「setups」という名前のシートを作成する。
+\item 「setups」の「A1」から「A9」まで、次の項目を入力する。
+
+\begin{table}[htp]
+\caption{「setups」に記載する内容}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+セル & 内容\\
+\hline
+A1 & 前回実行日時\\
+A2 & 次回実行日時\\
+A3 & 実行インターバル(日)\\
+A4 & 保存対象外のチャンネル(1)\\
+A5 & 保存対象外のチャンネル(2)\\
+A6 & 保存対象外のチャンネル(3)\\
+A7 & 保存対象外のチャンネル(4)\\
+A8 & 保存対象外のチャンネル(5)\\
+A9 & 保存対象外のチャンネル(6)\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}%
+
+\item 「setups」の「B4」から「B9」まで、保存対象外のチャンネルIDを入力する。
+\end{enumerate}
+
+\subsection{システムの立ち上げ}
+\begin{enumerate}
+\item 再度スクリプトエディタを開く。
+\item メニューバーから関数\verb|main|を選択し、「実行」をクリックする。
+\item 「このアプリはGoogleで確認されていません」というポップアップが表示されるので、「詳細」→「slackMsgSaverに移動」をクリック。
+\item 「許可」をクリックし、プロジェクトに権限を与える。
+\end{enumerate}
+
+
+\end{document}

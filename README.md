@@ -1,6 +1,6 @@
 # SlackMsgSaver
 
-`SlackMsgSaver` is the GAS(Google Apps Script)-Based system to save the messages in slack to the Google SpreadSheet.
+`SlackMsgSaver` is the GAS (Google Apps Script)-Based system to save the messages in slack to the Google SpreadSheet.
 
 In September 1st 2022, slack announced to stop keeping the message logs 90 days before. Using this system you can keep your all the message logs in Google SpreadSheet even after 90-days-limit.
 
