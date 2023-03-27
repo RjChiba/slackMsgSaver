@@ -1,19 +1,19 @@
-\documentclass[a4j, 11pt]{jsarticle}
-\usepackage[left=20mm,right=20mm,top=20mm,bottom=20mm]{geometry}
+\documentclass[a4j, 11pt, dvipdfmx]{jsarticle}
 
 % Required packages
-\usepackage{graphicx}
-\usepackage{listings}
-\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
 \usepackage[
 colorlinks=true,
 linkcolor=blue,
 filecolor=magenta,
 urlcolor=magenta]{hyperref}
+\usepackage{pxjahyper}
 
 \begin{document}
 \title{SlackからGoogle SpreadSheetにデータを転記するシステムの取り扱い説明書}
-\author{ Rj.Chiba \& ChatGPT }
+\author{ \href{https://www.twitter.com/rj\_phys}{Rj.Chiba} \& \href{https://openai.com/blog/chatgpt}{ChatGPT} }
 \date{\today}
 \maketitle
 
@@ -62,7 +62,7 @@ urlcolor=magenta]{hyperref}
 \begin{enumerate}
 \item Google Driveのページを開き、新規スプレッドシートを作成する。
 \item 「拡張機能」→「スクリプトエディタ」をクリックする。
-\item 作成されたスクリプトエディタで、以下のコードをコピー\&ペーストする。
+\item 作成されたスクリプトエディタで、\href{https://github.com/RjChiba/slackMsgSaver/blob/main/main.js}{Github}にあるコードをコピー\&ペーストする。
 \item \verb|const TOKEN = `YOUR_SLACK_API_TOKEN';| に「Bot User OAuth Access Token」を設定する。
 \item \verb|const timeZone| にタイムゾーンを設定する(日本国であれば\verb|`Asia/Tokyo'|)。
 \item スプレッドシートに戻り、「setups」という名前のシートを作成する。
@@ -99,6 +99,26 @@ A9 & 保存対象外のチャンネル(6)\\
 \item 「このアプリはGoogleで確認されていません」というポップアップが表示されるので、「詳細」→「slackMsgSaverに移動」をクリック。
 \item 「許可」をクリックし、プロジェクトに権限を与える。
 \end{enumerate}
+
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=2cm]
+
+\node (gas)      [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center] {Google Apps Script};
+\node (slackapi) [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, below of=gas] {Slack API};
+\node (slackws)  [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, below of=slackapi] {Slack Workspace};
+\node (gsheet)   [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, right of=gas, xshift=6cm] {Google SpreadSheet};
+
+\draw [ ->] (gas.south) -- node[right] {1. API Call} (slackapi.north);
+\draw [<->] (slackapi.south) -- node[right] {2. データ取得} (slackws.north);
+\draw [ ->] (slackapi.north) -- node[left] {3. データ送信} (gas.south);
+\draw [ ->] (gas.east) -- node[below] {5. データ書き込み} (gsheet.west);
+
+\end{tikzpicture}
+\caption{システムの模式図}
+\label{fig:system}
+\end{figure}
 
 
 \end{document}

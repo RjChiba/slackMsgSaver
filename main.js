@@ -43,7 +43,7 @@ function replaceText(text) {
   const regex = /<@(.*?)>/g;
   const replacedText = text.replace(regex, (match, userId) => {
     if (userCache[userId]) {
-      return userCache[userId];
+      return `@${userCache[userId]}`;
     } else {
       return match;
     }
@@ -86,7 +86,7 @@ function setNextDate(ts, sheet){
   // 2. set new trigger
   ScriptApp.newTrigger("main")
     .timeBased()
-    .at(date)
+    .at(ts)
     .inTimezone(timeZone)
     .create();
 }
@@ -121,7 +121,9 @@ function importSlackUsernameToCache(){
       userCache[user.id] = user.profile.display_name || user.name;
     });
   }else{
+    console.log("In `importSlackUsernameToCache`");
     console.log(userData.error);
+    return 0;
   }
 }
 
@@ -142,6 +144,12 @@ function importSlackChannelnameToCache(){
   var res = UrlFetchApp.fetch(apiUrl, options);
   var channelData = JSON.parse(res.getContentText());
 
+  if(!channelData.ok){
+    console.log("In `importSlackChannelnameToCache`");
+    console.log(channelData.error);
+    return 0;
+  }
+
   channelData.channels.forEach( (channel) => {
     channelCache[channel.id] = channel.name;
   })
@@ -149,6 +157,65 @@ function importSlackChannelnameToCache(){
 }
 
 function importSlackDataToSheet(CHANNEL, oldest) {
+  var msgData = importSlackMsg(CHANNEL, oldest);
+  if(!msgData.ok){
+    console.log(`In 'importSlackDataToSheet' ${channelCache[CHANNEL]}`);
+    console.log(msgData.error);
+    return 0;
+  };
+  var rows = [];
+
+  msgData.messages.forEach( (message) => {
+    rows.push([
+      Utilities.formatDate(new Date(message.ts * 1000), timeZone, 'yyyy-MM-dd hh:mm:ss'),
+      userCache[message.user],
+      replaceText(message.text),
+      `'${message.thread_ts || ''}`,
+    ]);
+  });
+
+  if(rows.length == 0){ return 0; }
+
+  var sheetName = channelCache[CHANNEL];
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+
+  // sheet setups
+  var lastRow = sheet.getLastRow();
+  if(lastRow == 0){
+    sheet.appendRow(['Timestamp', 'Author', 'Message', 'Thread TS']);
+    lastRow = 1;
+  }
+
+  // append top messages
+  sheet.getRange(1+lastRow, 1, rows.length, rows[0].length).setValues(rows);
+  
+  // get thread messages
+  const threadTsList = getTsGreaterThanThreshold(sheet, oldest);
+  var threadRows = [];
+
+  threadTsList.forEach( (thread_ts) => {
+    var threadlist = importSlackThread(CHANNEL, thread_ts, oldest);
+    threadlist.messages.forEach( (message) => {
+      threadRows.push([
+        Utilities.formatDate(new Date(message.ts * 1000), timeZone, 'yyyy-MM-dd hh:mm:ss'),
+        userCache[message.user],
+        replaceText(message.text),
+        `'${message.thread_ts || ''}`
+      ])
+    });
+  })
+
+  if(threadRows.length == 0){ return 0; }
+
+  lastRow = sheet.getLastRow();
+  sheet.getRange(1+lastRow, 1, threadRows.length, threadRows[0].length).setValues(threadRows);
+
+  // clearn up
+  sheet.getDataRange().removeDuplicates();
+}
+
+function importSlackMsg(CHANNEL, oldest){
   var apiUrl = `https://slack.com/api/conversations.history?channel=${CHANNEL}&inclusive=true&oldest=${oldest}`;
   const httpHeaders = {
     'Authorization': 'Bearer ' + TOKEN,
@@ -164,37 +231,31 @@ function importSlackDataToSheet(CHANNEL, oldest) {
   var response = UrlFetchApp.fetch(apiUrl, options);
   var data = JSON.parse(response.getContentText());
 
-  if(!data.ok){
-    console.log(data.error);
-    return 0;
+  return data;
+}
+
+function importSlackThread(CHANNEL, ts, oldest){
+  var apiUrl = `https://slack.com/api/conversations.replies?channel=${CHANNEL}&ts=${ts}&oldest=${oldest}`;
+  const httpHeaders = {
+    'Authorization': 'Bearer ' + TOKEN,
+    "Content-Type": "application/json; charset=utf-8"
   };
 
-  var headers = ['Timestamp', 'Author', 'Message', 'Thread ID'];
-  var rows = [];
+  const options = {
+    "method": "get",
+    "headers": httpHeaders,
+    "muteHttpExceptions": true
+  };
 
-  data.messages.forEach(function(message) {
-    rows.push([
-      new Date(message.ts * 1000), // msec -> sec
-      userCache[message.user],
-      replaceText(message.text),
-      message.thread_ts || '',
-    ]);
-  });
+  var response = UrlFetchApp.fetch(apiUrl, options);
+  var data = JSON.parse(response.getContentText());
+  
+  return data;
+}
 
-  // Insert the headers and rows into the sheet
-  if(rows.length !== 0){
-    // Create a new sheet and insert the message data into it
-    var sheetName = channelCache[CHANNEL];
-    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
-
-    let lastRow = sheet.getLastRow();
-
-    if(lastRow == 0){
-      sheet.appendRow(headers);
-      lastRow = 1;
-    }
-
-    sheet.getRange(1+lastRow, 1, rows.length, rows[0].length).setValues(rows);
-  }
+function getTsGreaterThanThreshold(sheet, ts_thres) {
+  const timestamps = sheet.getRange('D:D').getValues().flat().filter((timestamp) => timestamp != "'");
+  const filteredTimestamps = timestamps.filter((timestamp) => Number(timestamp.replace("'","")) > ts_thres);
+  console.log(filteredTimestamps);
+  return filteredTimestamps;
 }
