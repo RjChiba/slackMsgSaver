@@ -66,7 +66,7 @@ urlcolor=magenta]{hyperref}
 \item \verb|const TOKEN = `YOUR_SLACK_API_TOKEN';| に「Bot User OAuth Access Token」を設定する。
 \item \verb|const timeZone| にタイムゾーンを設定する(日本国であれば\verb|`Asia/Tokyo'|)。
 \item スプレッドシートに戻り、「setups」という名前のシートを作成する。
-\item 「setups」の「A1」から「A9」まで、次の項目を入力する。
+\item 「setups」の「A1」から「A3」まで、次の項目を入力する。
 
 \begin{table}[htp]
 \caption{「setups」に記載する内容}
@@ -78,18 +78,10 @@ urlcolor=magenta]{hyperref}
 A1 & 前回実行日時\\
 A2 & 次回実行日時\\
 A3 & 実行インターバル(日)\\
-A4 & 保存対象外のチャンネル(1)\\
-A5 & 保存対象外のチャンネル(2)\\
-A6 & 保存対象外のチャンネル(3)\\
-A7 & 保存対象外のチャンネル(4)\\
-A8 & 保存対象外のチャンネル(5)\\
-A9 & 保存対象外のチャンネル(6)\\
 \hline
 \end{tabular}
 \end{center}
 \end{table}%
-
-\item 「setups」の「B4」から「B9」まで、保存対象外のチャンネルIDを入力する。
 \end{enumerate}
 
 \subsection{システムの立ち上げ}
@@ -99,26 +91,6 @@ A9 & 保存対象外のチャンネル(6)\\
 \item 「このアプリはGoogleで確認されていません」というポップアップが表示されるので、「詳細」→「slackMsgSaverに移動」をクリック。
 \item 「許可」をクリックし、プロジェクトに権限を与える。
 \end{enumerate}
-
-
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[node distance=2cm]
-
-\node (gas)      [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center] {Google Apps Script};
-\node (slackapi) [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, below of=gas] {Slack API};
-\node (slackws)  [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, below of=slackapi] {Slack Workspace};
-\node (gsheet)   [rectangle, draw, minimum width=3cm, minimum height=1.5cm, align=center, right of=gas, xshift=6cm] {Google SpreadSheet};
-
-\draw [ ->] (gas.south) -- node[right] {1. API Call} (slackapi.north);
-\draw [<->] (slackapi.south) -- node[right] {2. データ取得} (slackws.north);
-\draw [ ->] (slackapi.north) -- node[left] {3. データ送信} (gas.south);
-\draw [ ->] (gas.east) -- node[below] {5. データ書き込み} (gsheet.west);
-
-\end{tikzpicture}
-\caption{システムの模式図}
-\label{fig:system}
-\end{figure}
 
 
 \end{document}

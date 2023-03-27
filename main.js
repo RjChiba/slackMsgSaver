@@ -1,4 +1,3 @@
-
 // set your `Bot User OAuth Access Token`
 const TOKEN = '';
 
@@ -7,7 +6,13 @@ const timeZone = 'Asia/Tokyo';
 
 let userCache = {};
 let channelCache = {};
-let exceptionChannel = [];
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Script')
+    .addItem('Force to Update', 'main')
+    .addToUi();
+}
 
 function main(){
   // setup sheet
@@ -19,20 +24,14 @@ function main(){
   // get channel data
   importSlackChannelnameToCache();
 
-  // get exception channel list
-  getExceptionChannel(setUpSheet);
-
   // get range of data to load
   const oldest = getOldestUnixTime(setUpSheet);
 
   const now = new Date();
 
   // get log and write sheet
-  // except exceptionChannel
   Object.keys(channelCache).forEach((id) => {
-    if(!exceptionChannel.includes(id)){
-      importSlackDataToSheet(id, oldest);
-    }
+    importSlackDataToSheet(id, oldest);
   }, channelCache);
 
   // set next date
@@ -50,15 +49,6 @@ function replaceText(text) {
   });
 
   return replacedText;
-}
-
-function getExceptionChannel(sheet){
-  const exceptions = sheet.getRange('B3:B8').getValues();
-  exceptions.forEach((channel) => {
-    if(channel[0] !== ''){
-      exceptionChannel.push(channel[0]);
-    }
-  });
 }
 
 function setNextDate(ts, sheet){
@@ -123,6 +113,7 @@ function importSlackUsernameToCache(){
   }else{
     console.log("In `importSlackUsernameToCache`");
     console.log(userData.error);
+    Browser.msgBox(userData.error);
     return 0;
   }
 }
@@ -206,11 +197,10 @@ function importSlackDataToSheet(CHANNEL, oldest) {
     });
   })
 
-  if(threadRows.length == 0){ return 0; }
-
-  lastRow = sheet.getLastRow();
-  sheet.getRange(1+lastRow, 1, threadRows.length, threadRows[0].length).setValues(threadRows);
-
+  if(threadRows.length != 0){
+    lastRow = sheet.getLastRow();
+    sheet.getRange(1+lastRow, 1, threadRows.length, threadRows[0].length).setValues(threadRows);
+  }
   // clearn up
   sheet.getDataRange().removeDuplicates();
 }
