@@ -25,7 +25,7 @@ function main(){
   importSlackChannelnameToCache();
 
   // get range of data to load
-  const oldest = getOldestUnixTime(setUpSheet);
+  const oldest = getOldestUnixTime(setUpSheet)/1000;
 
   const now = new Date();
 
@@ -55,7 +55,8 @@ function setNextDate(ts, sheet){
   // write spreadsheet
   // 1. operated time
   sheet.getRange('B1').setValue(Utilities.formatDate(ts, timeZone, 'yyyy-MM-dd hh:mm:ss'));
-  
+  sheet.getRange('C1').setValue(Date.parse(ts));
+
   // 2. next operation time
   let delta = sheet.getRange('B3').getValue();
   if(delta == ''){ delta = 30; };
@@ -82,7 +83,7 @@ function setNextDate(ts, sheet){
 }
 
 function getOldestUnixTime(sheet){
-  let date = sheet.getRange('C2').getValue();
+  let date = sheet.getRange('C1').getValue();
   if( date == '' ){
     date = 0;
   }
@@ -142,6 +143,7 @@ function importSlackChannelnameToCache(){
   }
 
   channelData.channels.forEach( (channel) => {
+    console.log(`200: channel detected ${channel.name}`);
     channelCache[channel.id] = channel.name;
   })
 
@@ -149,7 +151,9 @@ function importSlackChannelnameToCache(){
 
 function importSlackDataToSheet(CHANNEL, oldest) {
   var msgData = importSlackMsg(CHANNEL, oldest);
-  if(!msgData.ok){
+  if(msgData.ok){
+    // pass
+  }else{
     console.log(`In 'importSlackDataToSheet' ${channelCache[CHANNEL]}`);
     console.log(msgData.error);
     return 0;
@@ -206,7 +210,7 @@ function importSlackDataToSheet(CHANNEL, oldest) {
 }
 
 function importSlackMsg(CHANNEL, oldest){
-  var apiUrl = `https://slack.com/api/conversations.history?channel=${CHANNEL}&inclusive=true&oldest=${oldest}`;
+  var apiUrl = `https://slack.com/api/conversations.history?channel=${CHANNEL}&inclusive=true&oldest=${oldest}&pretty=1`;
   const httpHeaders = {
     'Authorization': 'Bearer ' + TOKEN,
     "Content-Type": "application/json; charset=utf-8"
@@ -225,7 +229,7 @@ function importSlackMsg(CHANNEL, oldest){
 }
 
 function importSlackThread(CHANNEL, ts, oldest){
-  var apiUrl = `https://slack.com/api/conversations.replies?channel=${CHANNEL}&ts=${ts}&oldest=${oldest}`;
+  var apiUrl = `https://slack.com/api/conversations.replies?channel=${CHANNEL}&ts=${ts}&oldest=${oldest}&pretty=1`;
   const httpHeaders = {
     'Authorization': 'Bearer ' + TOKEN,
     "Content-Type": "application/json; charset=utf-8"
@@ -246,6 +250,5 @@ function importSlackThread(CHANNEL, ts, oldest){
 function getTsGreaterThanThreshold(sheet, ts_thres) {
   const timestamps = sheet.getRange('D:D').getValues().flat().filter((timestamp) => timestamp != "'");
   const filteredTimestamps = timestamps.filter((timestamp) => Number(timestamp.replace("'","")) > ts_thres);
-  console.log(filteredTimestamps);
   return filteredTimestamps;
 }
