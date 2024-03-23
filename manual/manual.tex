@@ -13,7 +13,7 @@ urlcolor=magenta]{hyperref}
 
 \begin{document}
 \title{SlackからGoogle SpreadSheetにデータを転記するシステムの取り扱い説明書}
-\author{ \href{https://www.twitter.com/rj\_phys}{Rj.Chiba} \& \href{https://openai.com/blog/chatgpt}{ChatGPT} }
+\author{ \href{https://www.twitter.com/rj\_phys}{Rj.Chiba} Written with \href{https://openai.com/blog/chatgpt}{ChatGPT}}
 \date{\today}
 \maketitle
 
@@ -84,7 +84,7 @@ A3 & 実行インターバル(日)\\
 \end{table}%
 \end{enumerate}
 
-\subsection{システムの立ち上げ}
+\subsection{システムの立ち上げと実行}
 \begin{enumerate}
 \item 再度スクリプトエディタを開く。
 \item メニューバーから関数\verb|main|を選択し、「実行」をクリックする。
@@ -92,5 +92,7 @@ A3 & 実行インターバル(日)\\
 \item 「許可」をクリックし、プロジェクトに権限を与える。
 \end{enumerate}
 
+一度権限を与えると、シートを開く度にタブに「Script」というメニューが表示されます。
+「Script」→「Force to Update」をクリックすると強制的にデータをアップデートすることが可能です。
 
 \end{document}
