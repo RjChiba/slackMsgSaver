@@ -15,14 +15,14 @@ function onOpen() {
 }
 
 function main(){
-  // setup sheet
-  const setUpSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('setups');
-
   // get user data 
   importSlackUsernameToCache();
 
   // get channel data
   importSlackChannelnameToCache();
+
+  // setup sheet
+  const setUpSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('setups');
 
   // get range of data to load
   const oldest = getOldestUnixTime(setUpSheet);
@@ -90,7 +90,7 @@ function getOldestUnixTime(sheet){
 }
 
 function importSlackUsernameToCache(){
-  var apiUrl = "https://slack.com/api/users.list";
+  const apiUrl = "https://slack.com/api/users.list";
 
   const headers = {
     'Authorization': 'Bearer ' + TOKEN,
@@ -103,8 +103,8 @@ function importSlackUsernameToCache(){
     "muteHttpExceptions": true
   };
 
-  var res = UrlFetchApp.fetch(apiUrl, options);
-  var userData = JSON.parse(res.getContentText());
+  let res = UrlFetchApp.fetch(apiUrl, options);
+  let userData = JSON.parse(res.getContentText());
 
   if(userData.ok){
     userData.members.forEach((user) => {
@@ -132,8 +132,8 @@ function importSlackChannelnameToCache(){
     "muteHttpExceptions": true
   };
 
-  var res = UrlFetchApp.fetch(apiUrl, options);
-  var channelData = JSON.parse(res.getContentText());
+  let res = UrlFetchApp.fetch(apiUrl, options);
+  let channelData = JSON.parse(res.getContentText());
 
   if(!channelData.ok){
     console.log("In `importSlackChannelnameToCache`");
@@ -167,9 +167,9 @@ function importSlackDataToSheet(CHANNEL, oldest) {
 
   if(rows.length == 0){ return 0; }
 
-  var sheetName = channelCache[CHANNEL];
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  const sheetName = channelCache[CHANNEL];
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
 
   // sheet setups
   var lastRow = sheet.getLastRow();
@@ -206,7 +206,7 @@ function importSlackDataToSheet(CHANNEL, oldest) {
 }
 
 function importSlackMsg(CHANNEL, oldest){
-  var apiUrl = `https://slack.com/api/conversations.history?channel=${CHANNEL}&inclusive=true&oldest=${oldest}`;
+  const apiUrl = `https://slack.com/api/conversations.history?channel=${CHANNEL}&inclusive=true&oldest=${oldest}`;
   const httpHeaders = {
     'Authorization': 'Bearer ' + TOKEN,
     "Content-Type": "application/json; charset=utf-8"
@@ -218,14 +218,14 @@ function importSlackMsg(CHANNEL, oldest){
     "muteHttpExceptions": true
   };
 
-  var response = UrlFetchApp.fetch(apiUrl, options);
-  var data = JSON.parse(response.getContentText());
+  let response = UrlFetchApp.fetch(apiUrl, options);
+  let data = JSON.parse(response.getContentText());
 
   return data;
 }
 
 function importSlackThread(CHANNEL, ts, oldest){
-  var apiUrl = `https://slack.com/api/conversations.replies?channel=${CHANNEL}&ts=${ts}&oldest=${oldest}`;
+  const apiUrl = `https://slack.com/api/conversations.replies?channel=${CHANNEL}&ts=${ts}&oldest=${oldest}`;
   const httpHeaders = {
     'Authorization': 'Bearer ' + TOKEN,
     "Content-Type": "application/json; charset=utf-8"
@@ -237,15 +237,14 @@ function importSlackThread(CHANNEL, ts, oldest){
     "muteHttpExceptions": true
   };
 
-  var response = UrlFetchApp.fetch(apiUrl, options);
-  var data = JSON.parse(response.getContentText());
+  let response = UrlFetchApp.fetch(apiUrl, options);
+  let data = JSON.parse(response.getContentText());
   
   return data;
 }
 
 function getTsGreaterThanThreshold(sheet, ts_thres) {
   const timestamps = sheet.getRange('D:D').getValues().flat().filter((timestamp) => timestamp != "'");
-  const filteredTimestamps = timestamps.filter((timestamp) => Number(timestamp.replace("'","")) > ts_thres);
-  console.log(filteredTimestamps);
+  let filteredTimestamps = timestamps.filter((timestamp) => Number(timestamp.replace("'","")) > ts_thres);
   return filteredTimestamps;
 }
